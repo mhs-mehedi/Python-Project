@@ -1,0 +1,127 @@
+class Room:
+    def __init__(self, number, room_type, price, amenities):
+        self.number = number
+        self.room_type = room_type
+        self.price = price
+        self.amenities = amenities
+        self.is_booked = False
+
+    def __repr__(self):
+        status = "Booked" if self.is_booked else "Available"
+        return f"Room {self.number}: {self.room_type}, Price: ${self.price}, Amenities: {', '.join(self.amenities)}, Status: {status}"
+
+
+class Hotel:
+    def __init__(self, name):
+        self.name = name
+        self.rooms = []
+        self.booked_rooms = []
+
+    def add_room(self, room):
+        self.rooms.append(room)
+
+    def get_available_rooms(self):
+        return [room for room in self.rooms if not room.is_booked]
+
+    def book_room(self, room_number):
+        for room in self.rooms:
+            if room.number == room_number and not room.is_booked:
+                room.is_booked = True
+                self.booked_rooms.append(room)
+                return f"Room {room_number} has been successfully booked."
+        return f"Room {room_number} is not available or does not exist."
+
+    def checkout_room(self, room_number):
+        for room in self.booked_rooms:
+            if room.number == room_number:
+                room.is_booked = False
+                self.booked_rooms.remove(room)
+                return f"Room {room_number} has been checked out."
+        return f"Room {room_number} is not booked or does not exist."
+
+    def view_booked_rooms(self):
+        if not self.booked_rooms:
+            return "No rooms are currently booked."
+        return "\n".join(str(room) for room in self.booked_rooms)
+
+
+class Customer:
+    def __init__(self, name, budget, preferred_room_type, required_amenities):
+        self.name = name
+        self.budget = budget
+        self.preferred_room_type = preferred_room_type
+        self.required_amenities = required_amenities
+
+    def filter_rooms(self, rooms):
+        matching_rooms = [
+            room for room in rooms
+            if room.price <= self.budget
+            and (self.preferred_room_type.lower() in room.room_type.lower() or self.preferred_room_type == "")
+            and all(amenity in room.amenities for amenity in self.required_amenities)
+            and not room.is_booked
+        ]
+        return matching_rooms
+
+    def offer_room(self, hotel):
+        available_rooms = hotel.get_available_rooms()
+        filtered_rooms = self.filter_rooms(available_rooms)
+
+        if not filtered_rooms:
+            print(f"Sorry, {self.name}, no rooms match your criteria.")
+        else:
+            print(f"\nHi {self.name}, here are the rooms that fit your needs:")
+            for room in filtered_rooms:
+                print(room)
+
+
+if __name__ == "__main__":
+    hotel = Hotel("Ocean View Hotel")
+    hotel.add_room(Room(101, "Single", 100, ["Wi-Fi", "Air Conditioning", "TV"]))
+    hotel.add_room(Room(102, "Double", 150, ["Wi-Fi", "Air Conditioning", "TV", "Minibar"]))
+    hotel.add_room(Room(103, "Suite", 250, ["Wi-Fi", "Air Conditioning", "TV", "Minibar", "Ocean View"]))
+    hotel.add_room(Room(104, "Single", 90, ["Wi-Fi", "TV"]))
+    hotel.add_room(Room(105, "Double", 200, ["Wi-Fi", "Air Conditioning", "TV", "Minibar", "Balcony"]))
+    hotel.add_room(Room(106, "Family", 300, ["Wi-Fi", "Air Conditioning", "TV", "Sofa Bed", "Kitchenette"]))
+    hotel.add_room(Room(107, "Presidential Suite", 500, ["Wi-Fi", "Air Conditioning", "TV", "Minibar", "Jacuzzi", "Ocean View"]))
+
+    while True:
+        print("\nWelcome to Ocean View Hotel Management System")
+        print("1. View Available Rooms")
+        print("2. Book a Room")
+        print("3. Checkout a Room")
+        print("4. View Booked Rooms")
+        print("5. Exit")
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            print("\nAvailable Rooms:")
+            for room in hotel.get_available_rooms():
+                print(room)
+
+        elif choice == "2":
+            name = input("Enter your name: ")
+            budget = float(input("Enter your budget (in USD): $"))
+            preferred_room_type = input("Enter your preferred room type (Single, Double, Suite, Family, or leave blank for any): ")
+            required_amenities = input("Enter the amenities you need (comma-separated, e.g., Wi-Fi, TV): ").split(",")
+            required_amenities = [amenity.strip() for amenity in required_amenities]
+
+            customer = Customer(name, budget, preferred_room_type, required_amenities)
+            customer.offer_room(hotel)
+
+            room_number = int(input("Enter the room number you want to book: "))
+            print(hotel.book_room(room_number))
+
+        elif choice == "3":
+            room_number = int(input("Enter the room number to checkout: "))
+            print(hotel.checkout_room(room_number))
+
+        elif choice == "4":
+            print("\nBooked Rooms:")
+            print(hotel.view_booked_rooms())
+
+        elif choice == "5":
+            print("Thank you for using Ocean View Hotel Management System. Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Please try again.")
